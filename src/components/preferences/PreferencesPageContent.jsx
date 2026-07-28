@@ -5,29 +5,420 @@ import Link from "next/link";
 import { useApp } from "../../context/AppContext";
 import { cityOf, codeOf, fmtInt, placementYearOf, programOf, rankAt, riskOf, scoreTypeOf, uniOf } from "../../lib/program-utils";
 
-
-const tone = {
-  reach: "border-rose-400/20 bg-rose-400/10 text-rose-300",
-  down: "border-rose-400/20 bg-rose-400/10 text-rose-300",
-  target: "border-amber-400/20 bg-amber-400/10 text-amber-300",
-  flat: "border-amber-400/20 bg-amber-400/10 text-amber-300",
-  unknown: "border-slate-500/30 bg-slate-500/10 text-slate-300",
-  safe: "border-emerald-400/20 bg-emerald-400/10 text-emerald-300",
-  up: "border-emerald-400/20 bg-emerald-400/10 text-emerald-300",
+/* ── Tone maps ────────────────────────────────────────────────────────── */
+const toneStyle = {
+  reach:   { borderColor: "var(--warning-border)", background: "var(--warning-bg)", color: "var(--warning-text)" },
+  down:    { borderColor: "var(--danger-border)",  background: "var(--danger-bg)",  color: "var(--danger-text)" },
+  target:  { borderColor: "var(--info-border)",    background: "var(--info-bg)",    color: "var(--info-text)" },
+  flat:    { borderColor: "var(--info-border)",    background: "var(--info-bg)",    color: "var(--info-text)" },
+  unknown: { borderColor: "var(--border-soft)",    background: "var(--bg-elevated)", color: "var(--text-muted)" },
+  safe:    { borderColor: "var(--success-border)", background: "var(--success-bg)", color: "var(--success-text)" },
+  up:      { borderColor: "var(--success-border)", background: "var(--success-bg)", color: "var(--success-text)" },
 };
+
+const riskCountStyle = [
+  { key: "reach",   label: "İddialı",  ...{ border: "var(--warning-border)", bg: "var(--warning-bg)",  text: "var(--warning-text)" } },
+  { key: "target",  label: "Dengeli",  ...{ border: "var(--info-border)",    bg: "var(--info-bg)",    text: "var(--info-text)" } },
+  { key: "safe",    label: "Güvenli",  ...{ border: "var(--success-border)", bg: "var(--success-bg)", text: "var(--success-text)" } },
+  { key: "unknown", label: "Belirsiz", ...{ border: "var(--border-soft)",    bg: "var(--bg-elevated)", text: "var(--text-muted)" } },
+];
 
 export default function PreferencesPageContent() {
   const { profile, preferences, savePreferences, togglePreference } = useApp();
   const [message, setMessage] = useState("");
   const fileRef = useRef(null);
-  const counts = useMemo(() => preferences.reduce((all, program) => ({ ...all, [riskOf(program, profile).key]: all[riskOf(program, profile).key] + 1 }), { reach: 0, target: 0, safe: 0, unknown: 0 }), [preferences, profile]);
+
+  const counts = useMemo(
+    () =>
+      preferences.reduce(
+        (all, program) => ({
+          ...all,
+          [riskOf(program, profile).key]: (all[riskOf(program, profile).key] || 0) + 1,
+        }),
+        { reach: 0, target: 0, safe: 0, unknown: 0 }
+      ),
+    [preferences, profile]
+  );
+
   const smartSort = () => {
     const riskOrder = { reach: 0, target: 1, safe: 2, unknown: 3 };
-    const next = [...preferences].sort((left, right) => riskOrder[riskOf(left, profile).key] - riskOrder[riskOf(right, profile).key] || (rankAt(left) ?? Number.MAX_SAFE_INTEGER) - (rankAt(right) ?? Number.MAX_SAFE_INTEGER));
-    savePreferences(next); setMessage("Tercihlerin risk dağılımı ve başarı sırasına göre akıllı sıralandı.");
+    const next = [...preferences].sort(
+      (l, r) =>
+        riskOrder[riskOf(l, profile).key] - riskOrder[riskOf(r, profile).key] ||
+        (rankAt(l) ?? Number.MAX_SAFE_INTEGER) - (rankAt(r) ?? Number.MAX_SAFE_INTEGER)
+    );
+    savePreferences(next);
+    setMessage("Tercihlerin risk dağılımı ve başarı sırasına göre akıllı sıralandı.");
   };
-  const exportPreferences = () => { const blob = new Blob([JSON.stringify({ profile, preferences }, null, 2)], { type: "application/json" }); const anchor = document.createElement("a"); anchor.href = URL.createObjectURL(blob); anchor.download = "tercih-listem.json"; anchor.click(); URL.revokeObjectURL(anchor.href); };
-  const importPreferences = async (file) => { try { const parsed = JSON.parse(await file.text()); const next = Array.isArray(parsed) ? parsed : parsed.preferences; if (!Array.isArray(next)) throw new Error(); savePreferences(next); setMessage("Tercih listesi içe aktarıldı."); } catch { setMessage("Tercih dosyası okunamadı."); } };
 
-  return <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8"><header className="mb-6 flex flex-col justify-between gap-5 rounded-3xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] p-6 shadow-2xl shadow-black/15 sm:p-8 lg:flex-row lg:items-center [&_h1]:mt-2 [&_h1]:text-3xl [&_h1]:font-black [&_h1]:tracking-tight [&_h1]:text-white sm:[&_h1]:text-4xl [&_p]:mt-3 [&_p]:max-w-3xl [&_p]:text-sm [&_p]:leading-6 [&_p]:text-slate-400 sm:[&_p]:text-base"><div><span className="text-xs font-black uppercase tracking-[0.22em] text-cyan-300">Tercih yönetimi</span><h1>Tercih listem</h1><p>{preferences.length} program seçildi · en fazla {profile.maxPrefs} tercih</p></div><Link className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-xl border px-3.5 py-2 text-sm font-bold transition duration-200 focus-visible:ring-4 focus-visible:ring-cyan-400/15 disabled:cursor-not-allowed disabled:opacity-50 border-cyan-300/20 bg-gradient-to-r from-cyan-400 to-sky-500 text-slate-950 shadow-lg shadow-cyan-950/25 hover:-translate-y-0.5 hover:from-cyan-300 hover:to-sky-400" href="/programlar">+ Program ekle</Link></header>{message && <div className="mb-4 flex min-h-12 items-center rounded-2xl border px-4 py-3 text-sm font-medium leading-5 border-emerald-400/20 bg-emerald-400/10 text-emerald-200">{message}</div>}<section className="overflow-hidden rounded-3xl border border-white/10 bg-slate-900/60 p-5 shadow-2xl shadow-black/20 backdrop-blur-xl sm:p-7"><div className="mb-7 flex flex-wrap gap-2"><button className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-xl border px-3.5 py-2 text-sm font-bold transition duration-200 focus-visible:ring-4 focus-visible:ring-cyan-400/15 disabled:cursor-not-allowed disabled:opacity-50 border-cyan-300/20 bg-gradient-to-r from-cyan-400 to-sky-500 text-slate-950 shadow-lg shadow-cyan-950/25 hover:-translate-y-0.5 hover:from-cyan-300 hover:to-sky-400" disabled={preferences.length < 2} onClick={smartSort}>✦ Akıllı sırala</button><button className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-xl border px-3.5 py-2 text-sm font-bold transition duration-200 focus-visible:ring-4 focus-visible:ring-cyan-400/15 disabled:cursor-not-allowed disabled:opacity-50 border-slate-700/80 bg-slate-900/70 text-slate-300 hover:border-slate-600 hover:bg-slate-800 hover:text-white" onClick={exportPreferences}>Dışa aktar</button><button className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-xl border px-3.5 py-2 text-sm font-bold transition duration-200 focus-visible:ring-4 focus-visible:ring-cyan-400/15 disabled:cursor-not-allowed disabled:opacity-50 border-slate-700/80 bg-slate-900/70 text-slate-300 hover:border-slate-600 hover:bg-slate-800 hover:text-white" onClick={() => fileRef.current?.click()}>İçe aktar</button><button className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-xl border px-3.5 py-2 text-sm font-bold transition duration-200 focus-visible:ring-4 focus-visible:ring-cyan-400/15 disabled:cursor-not-allowed disabled:opacity-50 border-rose-400/20 bg-rose-500/10 text-rose-300 hover:border-rose-400/40 hover:bg-rose-500/20" onClick={() => savePreferences([])}>Temizle</button><input ref={fileRef} hidden type="file" accept=".json" onChange={(event) => event.target.files?.[0] && importPreferences(event.target.files[0])}/></div><h2 className="mb-3 text-sm font-black uppercase tracking-widest text-slate-400">Tercih dengesi</h2><div className="mb-7 grid grid-cols-2 gap-3 lg:grid-cols-4 [&>div]:relative [&>div]:overflow-hidden [&>div]:rounded-2xl [&>div]:border [&>div]:p-4 [&_b]:block [&_b]:text-3xl [&_b]:font-black [&_b]:text-white [&_span]:mt-1 [&_span]:block [&_span]:text-xs [&_span]:font-bold [&_span]:uppercase [&_span]:tracking-wider"><div className="border-rose-400/20 bg-rose-400/[0.08] text-rose-300"><b>{counts.reach}</b><span>İddialı</span></div><div className="border-amber-400/20 bg-amber-400/[0.08] text-amber-300"><b>{counts.target}</b><span>Dengeli</span></div><div className="border-emerald-400/20 bg-emerald-400/[0.08] text-emerald-300"><b>{counts.safe}</b><span>Güvenli</span></div><div className="border-slate-600/40 bg-slate-700/20 text-slate-400"><b>{counts.unknown}</b><span>Belirsiz</span></div></div><div className="overflow-hidden rounded-2xl border border-white/10 bg-slate-950/30">{preferences.length === 0 ? <div className="flex min-h-64 flex-col items-center justify-center gap-2 p-8 text-center [&>b]:text-lg [&>b]:font-black [&>b]:text-white [&>span]:max-w-md [&>span]:text-sm [&>span]:leading-6 [&>span]:text-slate-500"><b>Henüz tercih eklenmedi</b><span>Programlar sayfasından “+ Tercih” düğmesini kullanabilirsin.</span><Link className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-xl border px-3.5 py-2 text-sm font-bold transition duration-200 focus-visible:ring-4 focus-visible:ring-cyan-400/15 disabled:cursor-not-allowed disabled:opacity-50 border-cyan-300/20 bg-gradient-to-r from-cyan-400 to-sky-500 text-slate-950 shadow-lg shadow-cyan-950/25 hover:-translate-y-0.5 hover:from-cyan-300 hover:to-sky-400" href="/programlar">Programları incele</Link></div> : preferences.map((program, index) => { const risk = riskOf(program, profile); return <div className="grid grid-cols-[2.5rem_1fr_auto] items-center gap-3 border-b border-white/[0.07] p-4 transition hover:bg-white/[0.03] sm:gap-5 sm:p-5 [&>b]:grid [&>b]:size-9 [&>b]:place-items-center [&>b]:rounded-xl [&>b]:bg-slate-800 [&>b]:text-sm [&>b]:text-cyan-300 [&_strong]:block [&_strong]:font-extrabold [&_strong]:text-white [&>div>span]:mt-1 [&>div>span]:block [&>div>span]:text-sm [&>div>span]:text-slate-500 [&>button]:grid [&>button]:size-9 [&>button]:place-items-center [&>button]:rounded-xl [&>button]:text-xl [&>button]:text-slate-600 hover:[&>button]:bg-rose-400/10 hover:[&>button]:text-rose-300" key={codeOf(program)}><b>{index + 1}</b><div><strong>{programOf(program)}</strong><span>{uniOf(program)} · {cityOf(program)}</span><div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-500"><span className={`inline-flex min-h-6 items-center rounded-full border px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wide ${tone[risk.key] || tone.unknown}`}>{risk.label}</span><span>{placementYearOf(program)} sırası: <b>{fmtInt(rankAt(program))}</b></span><span>{scoreTypeOf(program)}</span></div></div><button onClick={() => togglePreference(program)}>×</button></div>; })}</div><button className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-xl border px-3.5 py-2 text-sm font-bold transition duration-200 focus-visible:ring-4 focus-visible:ring-cyan-400/15 disabled:cursor-not-allowed disabled:opacity-50 border-cyan-300/20 bg-gradient-to-r from-cyan-400 to-sky-500 text-slate-950 shadow-lg shadow-cyan-950/25 hover:-translate-y-0.5 hover:from-cyan-300 hover:to-sky-400 mt-5 w-full sm:w-auto print:hidden" onClick={() => window.print()}>Yazdır / PDF olarak kaydet</button></section></main>;
+  const exportPreferences = () => {
+    const blob = new Blob([JSON.stringify({ profile, preferences }, null, 2)], { type: "application/json" });
+    const anchor = document.createElement("a");
+    anchor.href = URL.createObjectURL(blob);
+    anchor.download = "tercih-listem.json";
+    anchor.click();
+    URL.revokeObjectURL(anchor.href);
+  };
+
+  const importPreferences = async (file) => {
+    try {
+      const parsed = JSON.parse(await file.text());
+      const next = Array.isArray(parsed) ? parsed : parsed.preferences;
+      if (!Array.isArray(next)) throw new Error();
+      savePreferences(next);
+      setMessage("Tercih listesi başarıyla içe aktarıldı.");
+    } catch {
+      setMessage("Tercih dosyası okunamadı. Lütfen geçerli bir JSON dosyası seçin.");
+    }
+  };
+
+  return (
+    <main
+      style={{ maxWidth: "72rem", margin: "0 auto", padding: "1.5rem 1.25rem" }}
+      className="sm:px-6 lg:px-8 lg:py-8"
+    >
+      {/* Header */}
+      <header className="page-header sm:flex-row sm:items-center" style={{ marginBottom: "1.5rem" }}>
+        <div>
+          <span className="badge">Tercih Yönetimi</span>
+          <h1
+            style={{
+              marginTop: "0.75rem",
+              fontSize: "1.625rem",
+              fontWeight: 700,
+              color: "var(--text-primary)",
+              letterSpacing: "-0.03em",
+              lineHeight: 1.2,
+            }}
+            className="sm:text-3xl"
+          >
+            Tercih Listem
+          </h1>
+          <p style={{ marginTop: "0.5rem", fontSize: "0.875rem", lineHeight: 1.7, color: "var(--text-muted)" }}>
+            Seçtiğiniz{" "}
+            <strong style={{ color: "var(--text-primary)", fontWeight: 600 }}>{preferences.length}</strong>{" "}
+            program — Maksimum {profile.maxPrefs || 24} tercih hakkınız bulunmaktadır
+          </p>
+        </div>
+        <Link
+          href="/programlar"
+          className="btn-primary"
+          style={{ textDecoration: "none", flexShrink: 0 }}
+        >
+          + Program Ekle
+        </Link>
+      </header>
+
+      {/* Alert */}
+      {message && (
+        <div
+          style={{
+            marginBottom: "1rem",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.75rem",
+            borderRadius: "var(--radius-lg)",
+            border: "1px solid var(--success-border)",
+            background: "var(--success-bg)",
+            padding: "0.875rem 1rem",
+            fontSize: "0.875rem",
+            fontWeight: 500,
+            color: "var(--success-text)",
+          }}
+        >
+          <span>✓</span>
+          <span>{message}</span>
+        </div>
+      )}
+
+      <section className="panel">
+        <div style={{ padding: "1.5rem" }}>
+          {/* Toolbar */}
+          <div
+            style={{
+              marginBottom: "1.5rem",
+              display: "flex",
+              flexWrap: "wrap",
+              alignItems: "center",
+              gap: "0.5rem",
+              paddingBottom: "1.25rem",
+              borderBottom: "1px solid var(--border-subtle)",
+            }}
+          >
+            <button
+              type="button"
+              className="btn-primary"
+              disabled={preferences.length < 2}
+              onClick={smartSort}
+            >
+              ✦ Akıllı Sırala
+            </button>
+            <button type="button" className="btn-secondary" onClick={exportPreferences}>
+              Dışa Aktar (.json)
+            </button>
+            <button type="button" className="btn-secondary" onClick={() => fileRef.current?.click()}>
+              İçe Aktar
+            </button>
+            <button type="button" className="btn-danger" onClick={() => savePreferences([])}>
+              Listeyi Temizle
+            </button>
+            <input
+              ref={fileRef}
+              hidden
+              type="file"
+              accept=".json"
+              onChange={(e) => e.target.files?.[0] && importPreferences(e.target.files[0])}
+            />
+          </div>
+
+          {/* Risk breakdown */}
+          <h2
+            style={{
+              marginBottom: "0.75rem",
+              fontSize: "0.6875rem",
+              fontWeight: 600,
+              letterSpacing: "0.06em",
+              textTransform: "uppercase",
+              color: "var(--text-muted)",
+            }}
+          >
+            Tercih Dengesi Analizi
+          </h2>
+          <div
+            style={{ marginBottom: "1.5rem", display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "0.75rem" }}
+            className="lg:grid-cols-4"
+          >
+            {riskCountStyle.map(({ key, label, border, bg, text }) => (
+              <div
+                key={key}
+                style={{
+                  borderRadius: "var(--radius-lg)",
+                  border: `1px solid ${border}`,
+                  background: bg,
+                  padding: "1rem 1.125rem",
+                }}
+              >
+                <b
+                  style={{
+                    display: "block",
+                    fontSize: "1.875rem",
+                    fontWeight: 700,
+                    color: "var(--text-primary)",
+                    letterSpacing: "-0.03em",
+                    lineHeight: 1,
+                  }}
+                >
+                  {counts[key]}
+                </b>
+                <span
+                  style={{
+                    display: "block",
+                    marginTop: "0.375rem",
+                    fontSize: "0.6875rem",
+                    fontWeight: 600,
+                    letterSpacing: "0.05em",
+                    textTransform: "uppercase",
+                    color: text,
+                  }}
+                >
+                  {label}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* List */}
+          <div
+            style={{
+              overflow: "hidden",
+              borderRadius: "var(--radius-lg)",
+              border: "1px solid var(--border-subtle)",
+              background: "var(--bg-elevated)",
+            }}
+          >
+            {preferences.length === 0 ? (
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  minHeight: "16rem",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "0.875rem",
+                  padding: "2rem",
+                  textAlign: "center",
+                }}
+              >
+                <div
+                  style={{
+                    width: "3rem",
+                    height: "3rem",
+                    display: "grid",
+                    placeItems: "center",
+                    borderRadius: "var(--radius-lg)",
+                    background: "var(--info-bg)",
+                    color: "var(--info-text)",
+                    fontSize: "1.25rem",
+                  }}
+                >
+                  🔖
+                </div>
+                <h3 style={{ fontSize: "1rem", fontWeight: 600, color: "var(--text-primary)" }}>
+                  Henüz tercih eklenmedi
+                </h3>
+                <p style={{ maxWidth: "28rem", fontSize: "0.8125rem", lineHeight: 1.6, color: "var(--text-muted)" }}>
+                  Programlar sayfasından ilginizi çeken üniversite programlarını "+ Tercih" düğmesini kullanarak listenize ekleyebilirsiniz.
+                </p>
+                <Link
+                  href="/programlar"
+                  className="btn-primary"
+                  style={{ marginTop: "0.5rem", textDecoration: "none" }}
+                >
+                  Programları İncele
+                </Link>
+              </div>
+            ) : (
+              <div>
+                {preferences.map((program, index) => {
+                  const risk = riskOf(program, profile);
+                  const st = toneStyle[risk.key] || toneStyle.unknown;
+                  return (
+                    <div
+                      key={codeOf(program)}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: "1rem",
+                        padding: "1rem 1.125rem",
+                        borderBottom: "1px solid var(--border-subtle)",
+                        transition: "background 0.1s ease",
+                      }}
+                      className="hover:bg-white/[0.01]"
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: "1rem", minWidth: 0 }}>
+                        {/* Index */}
+                        <span
+                          style={{
+                            flexShrink: 0,
+                            width: "2.25rem",
+                            height: "2.25rem",
+                            display: "grid",
+                            placeItems: "center",
+                            borderRadius: "var(--radius-md)",
+                            background: "var(--info-bg)",
+                            border: "1px solid var(--info-border)",
+                            fontSize: "0.8125rem",
+                            fontWeight: 700,
+                            color: "var(--info-text)",
+                          }}
+                        >
+                          {index + 1}
+                        </span>
+                        {/* Program info */}
+                        <div style={{ minWidth: 0 }}>
+                          <strong
+                            style={{
+                              display: "block",
+                              fontSize: "0.9375rem",
+                              fontWeight: 600,
+                              color: "var(--text-primary)",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {programOf(program)}
+                          </strong>
+                          <span
+                            style={{
+                              display: "block",
+                              marginTop: "0.125rem",
+                              fontSize: "0.75rem",
+                              color: "var(--text-muted)",
+                            }}
+                          >
+                            {uniOf(program)} · {cityOf(program)}
+                          </span>
+                          <div style={{ marginTop: "0.5rem", display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
+                            <span
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                borderRadius: "var(--radius-sm)",
+                                border: "1px solid",
+                                padding: "0.125rem 0.5rem",
+                                fontSize: "0.625rem",
+                                fontWeight: 700,
+                                letterSpacing: "0.04em",
+                                textTransform: "uppercase",
+                                ...st,
+                              }}
+                            >
+                              {risk.label}
+                            </span>
+                            <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
+                              {placementYearOf(program)} Sırası:{" "}
+                              <strong style={{ color: "var(--text-secondary)", fontWeight: 600 }}>
+                                {fmtInt(rankAt(program))}
+                              </strong>
+                            </span>
+                            <span
+                              style={{
+                                fontSize: "0.75rem",
+                                fontWeight: 600,
+                                color: "var(--primary-300)",
+                              }}
+                            >
+                              {scoreTypeOf(program)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Remove button */}
+                      <button
+                        type="button"
+                        onClick={() => togglePreference(program)}
+                        title="Listeden çıkar"
+                        style={{
+                          flexShrink: 0,
+                          width: "2.25rem",
+                          height: "2.25rem",
+                          display: "grid",
+                          placeItems: "center",
+                          borderRadius: "var(--radius-md)",
+                          border: "1px solid var(--border-soft)",
+                          background: "var(--bg-overlay)",
+                          color: "var(--text-muted)",
+                          fontSize: "1.125rem",
+                          lineHeight: 1,
+                          cursor: "pointer",
+                          transition: "all 0.15s ease",
+                        }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Print button */}
+          {preferences.length > 0 && (
+            <button
+              type="button"
+              className="btn-secondary print:hidden"
+              style={{ marginTop: "1rem" }}
+              onClick={() => window.print()}
+            >
+              🖨️ Yazdır / PDF Kaydet
+            </button>
+          )}
+        </div>
+      </section>
+    </main>
+  );
 }

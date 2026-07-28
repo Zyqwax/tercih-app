@@ -1,15 +1,102 @@
 export default function MultiPicker({ label, placeholder, value, onChange, onAdd, selected, onRemove, options }) {
   const fieldId = `field-${label.replace(/\s/g, "-")}`;
   const listId = `list-${label.replace(/\s/g, "-")}`;
+
   return (
-    <div className="flex min-w-0 flex-col gap-1">
-      <label className="px-0.5 text-[10px] font-semibold text-slate-400" htmlFor={fieldId}>{label}</label>
-      <div className="relative">
-        <input id={fieldId} list={listId} value={value} onChange={(event) => onChange(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); onAdd(); } }} placeholder={placeholder} className="h-9 rounded-md border-slate-700/80 bg-[#2d2d30] px-2.5 py-1.5 pr-9 text-xs text-slate-100 placeholder:text-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20" />
-        <button type="button" className="absolute right-1 top-1/2 grid size-7 -translate-y-1/2 place-items-center rounded-md text-slate-500 transition hover:bg-blue-500/10 hover:text-blue-400 focus-visible:ring-2 focus-visible:ring-blue-500/20" onClick={onAdd} aria-label={`${label} ekle`}><span className="text-base leading-none">+</span></button>
+    <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem", minWidth: 0 }}>
+      <label className="form-label" htmlFor={fieldId}>
+        {label}
+      </label>
+      <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+        <input
+          id={fieldId}
+          list={listId}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              onAdd();
+            }
+          }}
+          placeholder={placeholder}
+          style={{ paddingRight: "2.5rem" }}
+        />
+        <button
+          type="button"
+          onClick={onAdd}
+          aria-label={`${label} ekle`}
+          title="Seçilen değeri listeye ekle"
+          style={{
+            position: "absolute",
+            right: "0.375rem",
+            width: "1.75rem",
+            height: "1.75rem",
+            display: "grid",
+            placeItems: "center",
+            borderRadius: "calc(var(--radius-md) - 0.25rem)",
+            border: "none",
+            background: "rgba(56,189,248,0.1)",
+            color: "var(--primary-300)",
+            cursor: "pointer",
+            transition: "all 0.15s ease",
+            fontSize: "1rem",
+            fontWeight: 600,
+            lineHeight: 1,
+          }}
+        >
+          +
+        </button>
       </div>
-      <datalist id={listId}>{options.map((option) => <option key={option.id} value={option.name} />)}</datalist>
-      {selected.length > 0 && <div className="flex flex-wrap gap-1.5">{selected.map((item) => <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-500/25 bg-blue-500/10 px-2.5 py-1 text-xs font-semibold text-blue-300" key={item.id}>{item.name}<button className="text-base leading-none text-blue-400 hover:text-rose-400" onClick={() => onRemove(item.id)} aria-label={`${item.name} kaldır`}>×</button></span>)}</div>}
+      <datalist id={listId}>
+        {options.map((opt) => (
+          <option key={opt.id} value={opt.name} />
+        ))}
+      </datalist>
+
+      {selected.length > 0 && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.375rem", marginTop: "0.25rem" }}>
+          {selected.map((item) => (
+            <span
+              key={item.id}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.375rem",
+                padding: "0.25rem 0.625rem",
+                borderRadius: "var(--radius-sm)",
+                border: "1px solid var(--info-border)",
+                background: "var(--info-bg)",
+                fontSize: "0.75rem",
+                fontWeight: 500,
+                color: "var(--info-text)",
+              }}
+            >
+              {item.name}
+              <button
+                onClick={() => onRemove(item.id)}
+                aria-label={`${item.name} kaldır`}
+                style={{
+                  display: "grid",
+                  placeItems: "center",
+                  width: "1rem",
+                  height: "1rem",
+                  border: "none",
+                  background: "none",
+                  color: "var(--text-muted)",
+                  cursor: "pointer",
+                  fontSize: "0.875rem",
+                  lineHeight: 1,
+                  padding: 0,
+                  transition: "color 0.15s ease",
+                }}
+              >
+                ×
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

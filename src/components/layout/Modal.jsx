@@ -9,6 +9,112 @@ export default function Modal({ open, title, subtitle, onClose, children, wide =
     window.addEventListener("keydown", close);
     return () => window.removeEventListener("keydown", close);
   }, [open, onClose]);
+
   if (!open) return null;
-  return <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/85 p-0 backdrop-blur-md sm:items-center sm:p-5" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && onClose()}><section className={`flex max-h-[94vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl border border-white/10 bg-slate-900 shadow-2xl shadow-black/60 sm:rounded-3xl ${wide ? "max-w-6xl" : ""}`} role="dialog" aria-modal="true" aria-label={title}><header className="flex shrink-0 items-start justify-between gap-5 border-b border-white/10 bg-slate-950/45 px-5 py-4 sm:px-6 sm:py-5 [&_h2]:text-lg [&_h2]:font-black [&_h2]:leading-6 [&_h2]:text-white sm:[&_h2]:text-xl [&_p]:mt-1 [&_p]:text-sm [&_p]:text-slate-500"><div><h2>{title}</h2>{subtitle && <p>{subtitle}</p>}</div><button className="grid size-10 shrink-0 place-items-center rounded-xl border border-slate-700/80 bg-slate-900 text-xl text-slate-300 transition hover:border-slate-600 hover:bg-slate-800 hover:text-white" onClick={onClose} aria-label="Kapat">×</button></header><div className="overflow-y-auto p-5 sm:p-6">{children}</div></section></div>;
+
+  return (
+    <div
+      role="presentation"
+      onMouseDown={(event) => event.target === event.currentTarget && onClose()}
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 50,
+        display: "flex",
+        alignItems: "flex-end",
+        justifyContent: "center",
+        background: "rgba(7, 9, 15, 0.85)",
+        backdropFilter: "blur(12px)",
+        padding: "0",
+      }}
+      className="sm:items-center sm:p-6"
+    >
+      <section
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          maxHeight: "92dvh",
+          width: "100%",
+          maxWidth: wide ? "56rem" : "40rem",
+          overflow: "hidden",
+          background: "var(--bg-surface)",
+          border: "1px solid var(--border-soft)",
+          boxShadow: "0 24px 80px rgba(0,0,0,0.8)",
+          borderTopLeftRadius: "var(--radius-2xl)",
+          borderTopRightRadius: "var(--radius-2xl)",
+        }}
+        className="sm:rounded-2xl"
+      >
+        {/* Header */}
+        <header
+          style={{
+            flexShrink: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "1rem",
+            borderBottom: "1px solid var(--border-subtle)",
+            background: "var(--bg-elevated)",
+            padding: "1.125rem 1.5rem",
+          }}
+        >
+          <div style={{ minWidth: 0 }}>
+            <h2
+              style={{
+                fontSize: "1rem",
+                fontWeight: 700,
+                color: "var(--text-primary)",
+                letterSpacing: "-0.02em",
+                lineHeight: 1.3,
+              }}
+            >
+              {title}
+            </h2>
+            {subtitle && (
+              <p
+                style={{
+                  marginTop: "0.25rem",
+                  fontSize: "0.75rem",
+                  fontWeight: 500,
+                  color: "var(--text-accent)",
+                }}
+              >
+                {subtitle}
+              </p>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Kapat"
+            style={{
+              flexShrink: 0,
+              width: "2rem",
+              height: "2rem",
+              display: "grid",
+              placeItems: "center",
+              borderRadius: "var(--radius-md)",
+              border: "1px solid var(--border-soft)",
+              background: "var(--bg-overlay)",
+              color: "var(--text-muted)",
+              fontSize: "1.125rem",
+              lineHeight: 1,
+              cursor: "pointer",
+              transition: "all 0.15s ease",
+            }}
+          >
+            ×
+          </button>
+        </header>
+
+        {/* Body */}
+        <div style={{ overflowY: "auto", padding: "1.5rem" }}>
+          {children}
+        </div>
+      </section>
+    </div>
+  );
 }

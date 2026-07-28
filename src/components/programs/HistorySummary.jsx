@@ -12,7 +12,14 @@ function ChangeArrow({ current, previous, lowerIsBetter = false }) {
   const improved = lowerIsBetter ? current < previous : current > previous;
   return (
     <span
-      className={"ml-1.5 inline-block font-black " + (improved ? "text-emerald-400" : "text-rose-400")}
+      style={{
+        marginLeft: "0.375rem",
+        display: "inline-flex",
+        alignItems: "center",
+        fontSize: "0.75rem",
+        fontWeight: 700,
+        color: improved ? "var(--success-text)" : "var(--danger-text)",
+      }}
       title={improved ? "Önceki yıla göre iyileşti" : "Önceki yıla göre geriledi"}
       aria-label={improved ? "İyileşti" : "Geriledi"}
     >
@@ -23,38 +30,47 @@ function ChangeArrow({ current, previous, lowerIsBetter = false }) {
 
 export default function HistorySummary({ program }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-700/70 bg-slate-950/30 shadow-inner shadow-black/10">
-      <table className="w-full min-w-[540px] border-collapse text-right">
+    <div
+      style={{
+        overflow: "hidden",
+        borderRadius: "var(--radius-lg)",
+        border: "1px solid var(--border-subtle)",
+        background: "var(--bg-elevated)",
+      }}
+    >
+      <table className="data-table" style={{ minWidth: "34rem" }}>
         <thead>
-          <tr className="border-b border-slate-700/70 bg-slate-900/70">
-            <th className="px-4 py-3 text-center text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Yıl</th>
-            <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Taban Puan</th>
-            <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Başarı Sırası</th>
-            <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Kontenjan</th>
+          <tr>
+            <th style={{ textAlign: "center" }}>Yıl</th>
+            <th style={{ textAlign: "right" }}>Taban Puan</th>
+            <th style={{ textAlign: "right" }}>Başarı Sırası</th>
+            <th style={{ textAlign: "right" }}>Kontenjan</th>
           </tr>
         </thead>
         <tbody>
           {[0, 1, 2, 3].map((offset) => {
             const score = scoreAt(program, offset);
-            const previousScore = offset < 3 ? scoreAt(program, offset + 1) : null;
+            const prevScore = offset < 3 ? scoreAt(program, offset + 1) : null;
             const rank = rankAt(program, offset);
-            const previousRank = offset < 3 ? rankAt(program, offset + 1) : null;
+            const prevRank = offset < 3 ? rankAt(program, offset + 1) : null;
             const quota = historicalQuotaAt(program, offset);
-            const previousQuota = offset < 3 ? historicalQuotaAt(program, offset + 1) : null;
+            const prevQuota = offset < 3 ? historicalQuotaAt(program, offset + 1) : null;
             return (
-              <tr key={offset} className="border-b border-white/[0.05] transition last:border-b-0 hover:bg-white/[0.025]">
-                <td className="px-4 py-3.5 text-center text-xs font-bold text-slate-400">{placementYearOf(program, offset)}</td>
-                <td className="whitespace-nowrap px-4 py-3.5 text-sm font-medium text-slate-300">
+              <tr key={offset}>
+                <td style={{ textAlign: "center", color: "var(--text-secondary)", fontWeight: 500 }}>
+                  {placementYearOf(program, offset)}
+                </td>
+                <td style={{ textAlign: "right", whiteSpace: "nowrap", color: "var(--text-secondary)" }}>
                   {fmtScore(score)}
-                  <ChangeArrow current={score} previous={previousScore} />
+                  <ChangeArrow current={score} previous={prevScore} />
                 </td>
-                <td className="whitespace-nowrap px-4 py-3.5 text-sm font-medium text-slate-300">
+                <td style={{ textAlign: "right", whiteSpace: "nowrap", color: "var(--primary-300)", fontWeight: 600 }}>
                   {fmtInt(rank)}
-                  <ChangeArrow current={rank} previous={previousRank} lowerIsBetter />
+                  <ChangeArrow current={rank} previous={prevRank} lowerIsBetter />
                 </td>
-                <td className="whitespace-nowrap px-4 py-3.5 text-sm font-medium text-slate-300">
+                <td style={{ textAlign: "right", whiteSpace: "nowrap", color: "var(--text-secondary)" }}>
                   {fmtInt(quota)}
-                  <ChangeArrow current={quota} previous={previousQuota} />
+                  <ChangeArrow current={quota} previous={prevQuota} />
                 </td>
               </tr>
             );

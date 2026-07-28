@@ -6,105 +6,320 @@ import { usePathname } from "next/navigation";
 import { useApp } from "../../context/AppContext";
 
 const navigation = [
-  { href: "/programlar", label: "Programlar" },
-  { href: "/ai-danisman", label: "AI Danışman" },
+  { href: "/programlar", label: "Programlar", icon: (
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.75" className="size-4" aria-hidden="true">
+      <circle cx="9" cy="9" r="5.5" strokeLinecap="round" />
+      <path strokeLinecap="round" d="m15.5 15.5 2.5 2.5" />
+    </svg>
+  )},
+  { href: "/ai-danisman", label: "AI Danışman", icon: (
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.75" className="size-4" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9.5 3.5a6 6 0 1 1 0 12 6 6 0 0 1 0-12ZM9.5 7v3l2 1.5" />
+    </svg>
+  )},
 ];
 
 export default function AppHeader() {
   const pathname = usePathname();
   const { preferences } = useApp();
   const [mobileOpen, setMobileOpen] = useState(false);
+
   const refresh = () => window.dispatchEvent(new Event("yok:refresh"));
   const closeMobile = () => setMobileOpen(false);
-  const navClass = (path, mobile = false) => {
-    const base = mobile
-      ? "block rounded-md px-3 py-2 text-base font-medium transition"
-      : "rounded-md px-3 py-2 text-sm font-medium transition";
-    return pathname === path
-      ? base + " bg-slate-950/60 text-white shadow-sm"
-      : base + " text-slate-300 hover:bg-white/5 hover:text-white";
-  };
+
+  const isActive = (path) => pathname === path;
 
   return (
-    <nav className="sticky top-0 z-40 bg-slate-800/85 shadow-lg shadow-black/10 backdrop-blur-xl after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-white/10">
-      <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
-        <div className="relative flex h-16 items-center justify-between">
-          <div className="absolute inset-y-0 left-0 flex items-center sm:hidden">
-            <button
-              type="button"
-              className="relative inline-flex items-center justify-center rounded-md p-2 text-slate-400 transition hover:bg-white/5 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400"
-              aria-controls="mobile-menu"
-              aria-expanded={mobileOpen}
-              onClick={() => setMobileOpen((current) => !current)}
+    <nav
+      style={{
+        position: "sticky",
+        top: 0,
+        zIndex: 40,
+        backgroundColor: "rgba(7, 9, 15, 0.85)",
+        backdropFilter: "blur(24px) saturate(1.6)",
+        WebkitBackdropFilter: "blur(24px) saturate(1.6)",
+        borderBottom: "1px solid var(--border-subtle)",
+      }}
+    >
+      <div style={{ maxWidth: "1600px", margin: "0 auto", padding: "0 1.25rem" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "3.75rem", gap: "1rem" }}>
+
+          {/* Mobile menu button */}
+          <button
+            type="button"
+            className="sm:hidden"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "2.25rem",
+              height: "2.25rem",
+              borderRadius: "var(--radius-md)",
+              border: "1px solid var(--border-soft)",
+              background: "var(--bg-elevated)",
+              color: "var(--text-secondary)",
+              cursor: "pointer",
+              transition: "color 0.15s ease",
+            }}
+            aria-controls="mobile-menu"
+            aria-expanded={mobileOpen}
+            onClick={() => setMobileOpen((c) => !c)}
+          >
+            <span className="sr-only">Ana menüyü aç</span>
+            {mobileOpen ? (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="size-5" aria-hidden="true">
+                <path d="M6 18 18 6M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            ) : (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="size-5" aria-hidden="true">
+                <path d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            )}
+          </button>
+
+          {/* Logo */}
+          <Link
+            href="/programlar"
+            onClick={closeMobile}
+            style={{ display: "flex", alignItems: "center", gap: "0.75rem", textDecoration: "none", flexShrink: 0 }}
+          >
+            <div
+              style={{
+                width: "2rem",
+                height: "2rem",
+                borderRadius: "var(--radius-md)",
+                background: "linear-gradient(135deg, hsl(200 75% 52%) 0%, hsl(252 68% 58%) 100%)",
+                display: "grid",
+                placeItems: "center",
+                flexShrink: 0,
+                boxShadow: "0 2px 8px rgba(56,189,248,0.3)",
+              }}
             >
-              <span className="sr-only">Ana menüyü aç</span>
-              {!mobileOpen ? (
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="size-6" aria-hidden="true"><path d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-              ) : (
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="size-6" aria-hidden="true"><path d="M6 18 18 6M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" /></svg>
-              )}
-            </button>
-          </div>
-
-          <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
-            <Link href="/programlar" className="flex shrink-0 items-center gap-2.5" onClick={closeMobile}>
-              <span className="grid size-9 place-items-center rounded-lg bg-gradient-to-br from-cyan-400 to-indigo-500 text-lg font-black text-slate-950 shadow-lg shadow-cyan-950/30">◇</span>
-              <span className="hidden text-sm font-black tracking-tight text-white lg:block">YÖK Tercih Asistanı</span>
-            </Link>
-            <div className="hidden sm:ml-6 sm:block">
-              <div className="flex h-full items-center space-x-2">
-                {navigation.map((item) => (
-                  <Link key={item.href} href={item.href} className={navClass(item.href)} aria-current={pathname === item.href ? "page" : undefined}>
-                    {item.label}
-                  </Link>
-                ))}
-              </div>
+              <svg viewBox="0 0 16 16" fill="white" className="size-3.5" aria-hidden="true">
+                <path d="M8 1 L14 4.5 L14 11.5 L8 15 L2 11.5 L2 4.5 Z" fillOpacity="0.9" />
+              </svg>
             </div>
+            <div>
+              <span
+                style={{
+                  display: "block",
+                  fontSize: "0.9rem",
+                  fontWeight: 700,
+                  color: "var(--text-primary)",
+                  letterSpacing: "-0.02em",
+                  lineHeight: 1.2,
+                }}
+              >
+                YÖK Tercih
+              </span>
+              <span
+                className="hidden sm:block"
+                style={{
+                  fontSize: "0.625rem",
+                  fontWeight: 500,
+                  color: "var(--text-muted)",
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                }}
+              >
+                Asistanı
+              </span>
+            </div>
+          </Link>
+
+          {/* Desktop nav */}
+          <div
+            className="hidden sm:flex"
+            style={{
+              alignItems: "center",
+              gap: "0.25rem",
+              padding: "0.25rem",
+              borderRadius: "var(--radius-lg)",
+              background: "var(--bg-elevated)",
+              border: "1px solid var(--border-subtle)",
+              marginLeft: "1rem",
+              marginRight: "auto",
+            }}
+          >
+            {navigation.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                aria-current={isActive(item.href) ? "page" : undefined}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  padding: "0.4rem 0.875rem",
+                  borderRadius: "calc(var(--radius-lg) - 0.25rem)",
+                  fontSize: "0.8125rem",
+                  fontWeight: isActive(item.href) ? 600 : 500,
+                  color: isActive(item.href) ? "var(--text-primary)" : "var(--text-secondary)",
+                  background: isActive(item.href) ? "var(--bg-overlay)" : "transparent",
+                  border: isActive(item.href) ? "1px solid var(--border-soft)" : "1px solid transparent",
+                  textDecoration: "none",
+                  transition: "all 0.15s ease",
+                  letterSpacing: "-0.01em",
+                }}
+              >
+                {item.icon}
+                {item.label}
+              </Link>
+            ))}
           </div>
 
-          <div className="absolute inset-y-0 right-0 flex items-center gap-1 pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
+          {/* Right actions */}
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginLeft: "auto" }}>
+
+            {/* Refresh button */}
             {pathname === "/programlar" && (
               <button
                 type="button"
-                className="relative rounded-full p-2 text-slate-400 transition hover:bg-white/5 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400"
                 onClick={refresh}
                 title="Verileri yenile"
+                style={{
+                  width: "2.25rem",
+                  height: "2.25rem",
+                  display: "grid",
+                  placeItems: "center",
+                  borderRadius: "var(--radius-md)",
+                  border: "1px solid var(--border-soft)",
+                  background: "var(--bg-elevated)",
+                  color: "var(--text-muted)",
+                  cursor: "pointer",
+                  transition: "color 0.15s ease, border-color 0.15s ease",
+                  flexShrink: 0,
+                }}
               >
                 <span className="sr-only">Verileri yenile</span>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" className="size-5" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5" strokeLinecap="round" strokeLinejoin="round" /><path d="M6.1 9A7 7 0 0 1 18.5 6.5L20 8M4 16l1.5 1.5A7 7 0 0 0 17.9 15" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="size-4" aria-hidden="true">
+                  <path d="M20 7v5h-5M4 17v-5h5" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M6.1 9A7 7 0 0 1 18.5 6.5L20 8M4 16l1.5 1.5A7 7 0 0 0 17.9 15" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
               </button>
             )}
 
+            {/* Preferences button */}
             <Link
               href="/tercihler"
-              className={"relative rounded-full p-2 transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400 " + (pathname === "/tercihler" ? "bg-slate-950/60 text-white" : "text-slate-400 hover:bg-white/5 hover:text-white")}
-              aria-label={"Tercih listesi, " + preferences.length + " program"}
+              aria-label={`Tercih listesi, ${preferences.length} program`}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem",
+                padding: "0.4rem 0.75rem",
+                borderRadius: "var(--radius-md)",
+                border: isActive("/tercihler") ? "1px solid var(--info-border)" : "1px solid var(--border-soft)",
+                background: isActive("/tercihler") ? "var(--info-bg)" : "var(--bg-elevated)",
+                color: isActive("/tercihler") ? "var(--info-text)" : "var(--text-secondary)",
+                fontSize: "0.8125rem",
+                fontWeight: 500,
+                textDecoration: "none",
+                transition: "all 0.15s ease",
+                flexShrink: 0,
+              }}
             >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="size-5" aria-hidden="true"><path d="M6.75 4.75h10.5v15L12 16.5l-5.25 3.25v-15Z" strokeLinecap="round" strokeLinejoin="round" /></svg>
-              <span className="absolute -right-1 -top-1 grid min-w-5 place-items-center rounded-full bg-cyan-400 px-1 text-[10px] font-black leading-5 text-slate-950 ring-2 ring-slate-800">{preferences.length}</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" className="size-4" style={{ color: "var(--primary-300)" }} aria-hidden="true">
+                <path d="M17.5 4.75H6.5v15l5.5-3.25 5.5 3.25v-15Z" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <span className="hidden sm:inline">Tercihlerim</span>
+              <span
+                style={{
+                  display: "grid",
+                  placeItems: "center",
+                  minWidth: "1.25rem",
+                  height: "1.25rem",
+                  borderRadius: "9999px",
+                  background: "var(--primary-400)",
+                  padding: "0 0.3rem",
+                  fontSize: "0.6875rem",
+                  fontWeight: 700,
+                  color: "white",
+                }}
+              >
+                {preferences.length}
+              </span>
             </Link>
 
+            {/* Profile button */}
             <Link
               href="/profil"
-              className="relative ml-2 flex rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400"
               aria-label="Aday profilim"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem",
+                padding: "0.25rem 0.625rem 0.25rem 0.25rem",
+                borderRadius: "var(--radius-md)",
+                border: isActive("/profil") ? "1px solid var(--info-border)" : "1px solid var(--border-soft)",
+                background: isActive("/profil") ? "var(--info-bg)" : "var(--bg-elevated)",
+                textDecoration: "none",
+                transition: "all 0.15s ease",
+                flexShrink: 0,
+              }}
             >
-              <span className={"grid size-9 place-items-center rounded-full bg-gradient-to-br from-slate-600 to-slate-800 text-sm font-black text-slate-100 outline -outline-offset-1 transition hover:from-cyan-500 hover:to-indigo-600 " + (pathname === "/profil" ? "outline-2 outline-cyan-400" : "outline-white/15")}>A</span>
+              <div
+                style={{
+                  width: "1.75rem",
+                  height: "1.75rem",
+                  borderRadius: "calc(var(--radius-md) - 0.125rem)",
+                  background: "linear-gradient(135deg, hsl(200 75% 52%) 0%, hsl(252 68% 58%) 100%)",
+                  display: "grid",
+                  placeItems: "center",
+                  fontSize: "0.75rem",
+                  fontWeight: 700,
+                  color: "white",
+                }}
+              >
+                A
+              </div>
+              <span
+                className="hidden md:inline"
+                style={{ fontSize: "0.8125rem", fontWeight: 500, color: "var(--text-secondary)" }}
+              >
+                Profilim
+              </span>
             </Link>
           </div>
         </div>
       </div>
 
+      {/* Mobile menu */}
       {mobileOpen && (
-        <div id="mobile-menu" className="border-t border-white/10 bg-slate-900/95 px-2 pb-3 pt-2 sm:hidden">
-          <div className="space-y-1">
-            {navigation.map((item) => (
-              <Link key={item.href} href={item.href} className={navClass(item.href, true)} aria-current={pathname === item.href ? "page" : undefined} onClick={closeMobile}>
+        <div
+          id="mobile-menu"
+          style={{
+            borderTop: "1px solid var(--border-subtle)",
+            background: "rgba(7, 9, 15, 0.97)",
+            backdropFilter: "blur(24px)",
+            padding: "0.75rem 1.25rem 1rem",
+          }}
+          className="sm:hidden"
+        >
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+            {[...navigation, { href: "/tercihler", label: `Tercihlerim (${preferences.length})`, icon: null }, { href: "/profil", label: "Aday Profilim", icon: null }].map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={closeMobile}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.75rem",
+                  padding: "0.75rem 1rem",
+                  borderRadius: "var(--radius-md)",
+                  fontSize: "0.875rem",
+                  fontWeight: isActive(item.href) ? 600 : 500,
+                  color: isActive(item.href) ? "var(--text-primary)" : "var(--text-secondary)",
+                  background: isActive(item.href) ? "var(--bg-elevated)" : "transparent",
+                  textDecoration: "none",
+                  transition: "all 0.15s ease",
+                }}
+              >
+                {item.icon}
                 {item.label}
               </Link>
             ))}
-            <Link href="/tercihler" className={navClass("/tercihler", true)} onClick={closeMobile}>Tercihlerim <span className="ml-1 text-cyan-300">({preferences.length})</span></Link>
-            <Link href="/profil" className={navClass("/profil", true)} onClick={closeMobile}>Aday profilim</Link>
           </div>
         </div>
       )}

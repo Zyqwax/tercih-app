@@ -20,11 +20,11 @@ import FilterPanel from "./FilterPanel";
 import ProgramDetailModal from "./ProgramDetailModal";
 import ProgramResults from "./ProgramResults";
 
-const statusTone = {
-  info: "border-sky-400/20 bg-sky-400/10 text-sky-200",
-  success: "border-emerald-400/20 bg-emerald-400/10 text-emerald-200",
-  warn: "border-amber-400/20 bg-amber-400/10 text-amber-200",
-  error: "border-rose-400/20 bg-rose-400/10 text-rose-200",
+const statusToneStyle = {
+  info:    { borderColor: "var(--info-border)",    background: "var(--info-bg)",    color: "var(--info-text)" },
+  success: { borderColor: "var(--success-border)", background: "var(--success-bg)", color: "var(--success-text)" },
+  warn:    { borderColor: "var(--warning-border)", background: "var(--warning-bg)", color: "var(--warning-text)" },
+  error:   { borderColor: "var(--danger-border)",  background: "var(--danger-bg)",  color: "var(--danger-text)" },
 };
 
 
@@ -270,7 +270,7 @@ export default function ProgramExplorer() {
   );
 
   return (
-    <main className="mx-auto w-full max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+    <main style={{ maxWidth: "1600px", margin: "0 auto", padding: "1.5rem 1.25rem" }} className="sm:px-6 lg:px-8 lg:py-8">
       <FilterPanel
         open={filtersOpen}
         onToggle={() => setFiltersOpen(!filtersOpen)}
@@ -288,23 +288,71 @@ export default function ProgramExplorer() {
         onReset={resetFilters}
         onApply={() => search(0)}
       />
-      <div className={`mb-4 flex min-h-12 items-center rounded-2xl border px-4 py-3 text-sm font-medium leading-5 ${statusTone[message.type] || statusTone.info}`}>{message.text}</div>
-      <section className="mb-4 grid gap-4 rounded-3xl border border-white/10 bg-slate-900/45 p-4 sm:p-5 lg:grid-cols-[minmax(20rem,1fr)_auto] lg:items-center">
-        <div className="relative [&>span]:pointer-events-none [&>span]:absolute [&>span]:left-4 [&>span]:top-1/2 [&>span]:-translate-y-1/2 [&>span]:text-xl [&>span]:text-cyan-300 [&>input]:min-h-12 [&>input]:rounded-2xl [&>input]:pl-11 [&>input]:text-base">
-          <span>⌕</span>
+
+      {/* Status bar */}
+      <div
+        className="status-bar"
+        style={{
+          marginBottom: "1rem",
+          ...(statusToneStyle[message.type] || statusToneStyle.info),
+        }}
+      >
+        {message.text}
+      </div>
+
+      {/* Search + count */}
+      <div
+        style={{
+          marginBottom: "1rem",
+          display: "grid",
+          gap: "0.75rem",
+          borderRadius: "var(--radius-xl)",
+          border: "1px solid var(--border-subtle)",
+          background: "var(--bg-surface)",
+          padding: "0.875rem 1.25rem",
+          alignItems: "center",
+        }}
+        className="lg:grid-cols-[minmax(20rem,1fr)_auto]"
+      >
+        <div style={{ position: "relative" }}>
+          <span
+            style={{
+              position: "absolute",
+              left: "0.875rem",
+              top: "50%",
+              transform: "translateY(-50%)",
+              fontSize: "1.125rem",
+              color: "var(--primary-300)",
+              pointerEvents: "none",
+              lineHeight: 1,
+            }}
+          >
+            ⌕
+          </span>
           <input
             value={filters.query}
-            onChange={(event) => setFilter("query", event.target.value)}
+            onChange={(e) => setFilter("query", e.target.value)}
             placeholder="Program, üniversite, şehir veya ÖSYM kodu ara…"
+            style={{ paddingLeft: "2.25rem", fontSize: "0.9375rem" }}
           />
         </div>
-        <div className="min-w-fit [&>h2]:text-base [&>h2]:font-black [&>h2]:text-white [&>span]:text-xs [&>span]:text-slate-500">
-          <h2>Programlar</h2>
-          <span>
-            {visiblePrograms.length} gösteriliyor · toplam {fmtInt(pageData.totalElements ?? 0)}
+        <div style={{ whiteSpace: "nowrap" }}>
+          <h2
+            style={{
+              fontSize: "0.9375rem",
+              fontWeight: 700,
+              color: "var(--text-primary)",
+              letterSpacing: "-0.01em",
+            }}
+          >
+            Programlar
+          </h2>
+          <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
+            {visiblePrograms.length} gösteriliyor &middot; toplam {fmtInt(pageData.totalElements ?? 0)}
           </span>
         </div>
-      </section>
+      </div>
+
       <ProgramResults
         programs={visiblePrograms}
         loading={loading}
