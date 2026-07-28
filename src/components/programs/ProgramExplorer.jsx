@@ -20,7 +20,6 @@ import FilterPanel from "./FilterPanel";
 import ProgramDetailModal from "./ProgramDetailModal";
 import ProgramResults from "./ProgramResults";
 
-const UI_KEY = "yokTercih.ui.v3";
 const statusTone = {
   info: "border-sky-400/20 bg-sky-400/10 text-sky-200",
   success: "border-emerald-400/20 bg-emerald-400/10 text-emerald-200",
@@ -50,7 +49,6 @@ export default function ProgramExplorer() {
   });
   const [filtersOpen, setFiltersOpen] = useState(true);
   const [detailProgram, setDetailProgram] = useState(null);
-  const [view, setView] = useState("table");
   const initialized = useRef(false);
   const quickSearchUsed = useRef(false);
 
@@ -89,10 +87,6 @@ export default function ProgramExplorer() {
       scoreType: profile.scoreType || "SAY",
     };
     setFilters(initialFilters);
-    try {
-      const storedUi = JSON.parse(localStorage.getItem(UI_KEY));
-      if (storedUi?.view) setView(storedUi.view);
-    } catch {}
     loadLookups();
     search(0, initialFilters, [], []);
   }, [ready]);
@@ -255,10 +249,6 @@ export default function ProgramExplorer() {
     setSelectedCities([]);
     search(0, next, [], []);
   };
-  const changeView = (next) => {
-    setView(next);
-    localStorage.setItem(UI_KEY, JSON.stringify({ view: next }));
-  };
   const handleToggle = (program) => {
     const result = togglePreference(program);
     if (!result.ok) setMessage({ type: "warn", text: result.message });
@@ -294,11 +284,12 @@ export default function ProgramExplorer() {
         cityOptions={cityOptions}
         languageOptions={languageOptions}
         addSelection={addSelection}
+        preferenceCount={preferences.length}
         onReset={resetFilters}
         onApply={() => search(0)}
       />
       <div className={`mb-4 flex min-h-12 items-center rounded-2xl border px-4 py-3 text-sm font-medium leading-5 ${statusTone[message.type] || statusTone.info}`}>{message.text}</div>
-      <section className="mb-4 grid gap-4 rounded-3xl border border-white/10 bg-slate-900/45 p-4 sm:p-5 lg:grid-cols-[minmax(20rem,1fr)_auto_auto] lg:items-center">
+      <section className="mb-4 grid gap-4 rounded-3xl border border-white/10 bg-slate-900/45 p-4 sm:p-5 lg:grid-cols-[minmax(20rem,1fr)_auto] lg:items-center">
         <div className="relative [&>span]:pointer-events-none [&>span]:absolute [&>span]:left-4 [&>span]:top-1/2 [&>span]:-translate-y-1/2 [&>span]:text-xl [&>span]:text-cyan-300 [&>input]:min-h-12 [&>input]:rounded-2xl [&>input]:pl-11 [&>input]:text-base">
           <span>⌕</span>
           <input
@@ -313,19 +304,10 @@ export default function ProgramExplorer() {
             {visiblePrograms.length} gösteriliyor · toplam {fmtInt(pageData.totalElements ?? 0)}
           </span>
         </div>
-        <div className="flex rounded-xl border border-slate-800 bg-slate-950/60 p-1 [&>button]:flex-1 [&>button]:rounded-lg [&>button]:px-3 [&>button]:py-2 [&>button]:text-xs [&>button]:font-bold [&>button]:text-slate-500 [&>button]:transition hover:[&>button]:text-white">
-          <button className={view === "table" ? "border-cyan-400/40 bg-cyan-400/10 text-cyan-100 shadow-lg shadow-cyan-950/20 ring-1 ring-cyan-400/20" : ""} onClick={() => changeView("table")}>
-            ☷ Liste
-          </button>
-          <button className={view === "cards" ? "border-cyan-400/40 bg-cyan-400/10 text-cyan-100 shadow-lg shadow-cyan-950/20 ring-1 ring-cyan-400/20" : ""} onClick={() => changeView("cards")}>
-            ▦ Kart
-          </button>
-        </div>
       </section>
       <ProgramResults
         programs={visiblePrograms}
         loading={loading}
-        view={view}
         profile={profile}
         preferences={preferences}
         onTogglePreference={handleToggle}

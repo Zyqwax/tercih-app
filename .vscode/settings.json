@@ -1,5 +1,6 @@
 {
     "material-icon-theme.hidesExplorerArrows": true,
     "prettier.printWidth": 120,
-    "editor.formatOnSave": true
+    "editor.formatOnSave": true,
+    "editor.unicodeHighlight.ambiguousCharacters": false
 }
