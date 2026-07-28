@@ -8,6 +8,7 @@ globalThis.__yokApiMemoryCache = cache;
 const DISPLAY_FIELDS = new Set(["universiteAdi", "birimAdi", "birimGrupAdi", "ilAdi", "uniIlAdi", "uniIlceAdi", "ilceAdi", "fymkAdi", "fymkIlAdi", "fymkIlceAdi", "ogrenimDiliAdi", "bursOraniAdi", "ogrenimTuruAdi"]);
 const ACRONYMS = new Set(["AB", "ABD", "AYT", "DGS", "İİBF", "KKTC", "MEB", "MYO", "ÖSYM", "TÖMER", "TR", "TYT", "YDT", "YKS"]);
 const COMMON_LANGUAGES = ["Türkçe", "İngilizce", "Almanca", "Fransızca", "Arapça", "Rusça"].map((name, index) => ({ ogrenimDiliId: `live-${index + 1}`, ogrenimDiliAdi: name }));
+
 const normalized = (value = "") => String(value ?? "").toLocaleLowerCase("tr-TR").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ı/g, "i").replace(/[^a-z0-9]+/g, " ").trim();
 const positiveNumber = (value) => { const number = Number(value); return Number.isFinite(number) && number > 0 ? number : null; };
 const asIds = (value) => [...new Set((Array.isArray(value) ? value : value == null ? [] : [value]).map(Number).filter(Number.isFinite))];
@@ -20,6 +21,7 @@ function titleWord(value) {
 }
 
 function smartTitle(value) {
+  if (!value || typeof value !== "string") return value;
   return String(value).normalize("NFC").replace(/\s+/g, " ").trim().split(/([\s/()\[\],-]+)/).map((part) => /^[\s/()\[\],-]+$/.test(part) ? part : titleWord(part)).join("").replace(/\b(Ve|İle|Veya|İçin)\b/g, (word) => word.toLocaleLowerCase("tr-TR"));
 }
 
@@ -105,35 +107,28 @@ function tokenMatches(optionToken, queryToken) {
   return optionToken === queryToken || (queryToken.length >= 2 && optionToken.startsWith(queryToken));
 }
 
-function matchingOptions(options, nameField, assignedTokens) {
-  if (!assignedTokens.length) return [];
-  return options.filter((option) => {
-    const tokens = optionTokens(option[nameField]);
-    return assignedTokens.every((queryToken) => tokens.some((optionToken) => tokenMatches(optionToken, queryToken)));
-  });
-}
-
+// Optimized linear lookup match (replaces 3^N exponential recursion)
 function resolveTextQuery(query, lookups) {
-  const tokens = optionTokens(query).slice(0, 6);
+  const queryNorm = normalized(query);
+  if (!queryNorm) return null;
+  const tokens = queryNorm.split(/\s+/).filter(Boolean).slice(0, 6);
   if (!tokens.length) return null;
-  const domains = [
-    { key: "birimGrupId", name: "birimGrupAdi", options: lookups.programs },
-    { key: "universiteId", name: "universiteAdi", options: lookups.universities },
-    { key: "ilKodu", name: "ilAdi", options: lookups.cities },
-  ];
-  let best = null;
-  const combinations = 3 ** tokens.length;
-  for (let encoded = 0; encoded < combinations; encoded += 1) {
-    let value = encoded;
-    const groups = [[], [], []];
-    tokens.forEach((token) => { groups[value % 3].push(token); value = Math.floor(value / 3); });
-    const matches = groups.map((group, index) => matchingOptions(domains[index].options, domains[index].name, group));
-    if (groups.some((group, index) => group.length && !matches[index].length)) continue;
-    const score = matches.reduce((total, items) => total + (items.length || 0), 0) + groups.filter((group) => group.length).length / 10;
-    if (!best || score < best.score) best = { score, matches };
-  }
-  if (!best) return null;
-  return Object.fromEntries(domains.map((domain, index) => [domain.key, best.matches[index].map((item) => Number(item[domain.key])).filter(Number.isFinite)]));
+
+  const matchCategory = (options, nameKey, idKey) => {
+    return options
+      .filter((opt) => {
+        const nameNorm = normalized(opt[nameKey]);
+        return tokens.some((t) => nameNorm.includes(t));
+      })
+      .map((opt) => Number(opt[idKey]))
+      .filter(Number.isFinite);
+  };
+
+  const birimGrupId = matchCategory(lookups.programs || [], "birimGrupAdi", "birimGrupId");
+  const universiteId = matchCategory(lookups.universities || [], "universiteAdi", "universiteId");
+  const ilKodu = matchCategory(lookups.cities || [], "ilAdi", "ilKodu");
+
+  return { birimGrupId, universiteId, ilKodu };
 }
 
 function mergeIds(existing, derived) {

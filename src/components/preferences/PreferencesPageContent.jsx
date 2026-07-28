@@ -267,7 +267,7 @@ export default function PreferencesPageContent() {
                   Henüz tercih eklenmedi
                 </h3>
                 <p style={{ maxWidth: "28rem", fontSize: "0.8125rem", lineHeight: 1.6, color: "var(--text-muted)" }}>
-                  Programlar sayfasından ilginizi çeken üniversite programlarını "+ Tercih" düğmesini kullanarak listenize ekleyebilirsiniz.
+                  Programlar sayfasından ilginizi çeken üniversite programlarını &ldquo;+ Tercih&rdquo; düğmesini kullanarak listenize ekleyebilirsiniz.
                 </p>
                 <Link
                   href="/programlar"

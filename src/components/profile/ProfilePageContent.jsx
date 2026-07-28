@@ -2,10 +2,8 @@
 
 import { useApp } from "../../context/AppContext";
 
-export default function ProfilePageContent() {
-  const { profile, saveProfile } = useApp();
-
-  const Section = ({ children }) => (
+function Section({ children }) {
+  return (
     <div
       style={{
         display: "flex",
@@ -20,6 +18,10 @@ export default function ProfilePageContent() {
       {children}
     </div>
   );
+}
+
+export default function ProfilePageContent() {
+  const { profile, saveProfile } = useApp();
 
   return (
     <main
@@ -78,15 +80,13 @@ export default function ProfilePageContent() {
               animation: "pulse 2s ease-in-out infinite",
             }}
           />
-          Otomatik Kaydediliyor
+          Otomatik Kaydedildiği Alan
         </span>
       </header>
 
       {/* Form */}
       <section className="panel">
-        <div
-          style={{ padding: "1.5rem" }}
-        >
+        <div style={{ padding: "1.5rem" }}>
           <div
             style={{ display: "grid", gap: "0.875rem" }}
             className="sm:grid-cols-2 lg:grid-cols-4"

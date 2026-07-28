@@ -13,20 +13,28 @@ export function AppProvider({ children }) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    try {
-      const storedProfile = JSON.parse(
-        localStorage.getItem(PROFILE_KEY) ||
-          localStorage.getItem("yokTercih.profile.v2"),
-      );
-      const storedPreferences = JSON.parse(
-        localStorage.getItem(PREFS_KEY) ||
-          localStorage.getItem("yokTercih.preferences.v2"),
-      );
-      if (storedProfile) setProfileState(storedProfile);
-      if (Array.isArray(storedPreferences))
-        setPreferencesState(storedPreferences);
-    } catch {}
-    setReady(true);
+    let cancelled = false;
+
+    queueMicrotask(() => {
+      if (cancelled) return;
+      try {
+        const storedProfile = JSON.parse(
+          localStorage.getItem(PROFILE_KEY) ||
+            localStorage.getItem("yokTercih.profile.v2"),
+        );
+        const storedPreferences = JSON.parse(
+          localStorage.getItem(PREFS_KEY) ||
+            localStorage.getItem("yokTercih.preferences.v2"),
+        );
+        if (storedProfile) setProfileState(storedProfile);
+        if (Array.isArray(storedPreferences)) setPreferencesState(storedPreferences);
+      } catch {}
+      setReady(true);
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const saveProfile = (next) => {

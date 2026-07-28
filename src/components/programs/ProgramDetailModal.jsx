@@ -67,7 +67,12 @@ export default function ProgramDetailModal({ program, onClose, onMessage }) {
   const [netRows, setNetRows] = useState([]);
   const [netLoading, setNetLoading] = useState(false);
 
-  useEffect(() => setNetRows([]), [program]);
+  const [prevProgramCode, setPrevProgramCode] = useState(codeOf(program));
+  if (codeOf(program) !== prevProgramCode) {
+    setPrevProgramCode(codeOf(program));
+    setNetRows([]);
+  }
+
   if (!program) return null;
 
   const preferred = preferences.some((item) => codeOf(item) === codeOf(program));

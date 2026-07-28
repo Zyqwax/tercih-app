@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import { useApp } from "../../context/AppContext";
 import { cacheGet, cacheSet, cacheTime, fetchJson } from "../../lib/client-data";
 import {
@@ -51,6 +51,14 @@ export default function ProgramExplorer() {
   const [detailProgram, setDetailProgram] = useState(null);
   const initialized = useRef(false);
   const quickSearchUsed = useRef(false);
+  const initializeData = useEffectEvent((initialFilters) => {
+    loadLookups();
+    search(0, initialFilters, [], []);
+  });
+  const runQuickSearch = useEffectEvent((query) => {
+    quickSearchUsed.current = Boolean(query);
+    search(0, filters, selectedPrograms, selectedCities);
+  });
 
   const lookupOptions = (list, nameKeys, idKeys) => {
     const unique = new Map();
@@ -87,9 +95,8 @@ export default function ProgramExplorer() {
       scoreType: profile.scoreType || "SAY",
     };
     setFilters(initialFilters);
-    loadLookups();
-    search(0, initialFilters, [], []);
-  }, [ready]);
+    initializeData(initialFilters);
+  }, [ready, profile.scoreType]);
 
   useEffect(() => {
     const refresh = () => refreshData();
@@ -102,8 +109,7 @@ export default function ProgramExplorer() {
     const query = filters.query.trim();
     if (query.length === 1 || (!query && !quickSearchUsed.current)) return;
     const timer = window.setTimeout(() => {
-      quickSearchUsed.current = Boolean(query);
-      search(0, filters, selectedPrograms, selectedCities);
+      runQuickSearch(query);
     }, 450);
     return () => window.clearTimeout(timer);
   }, [filters.query, programOptions, cityOptions, universityOptions]);

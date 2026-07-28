@@ -693,7 +693,7 @@ export default function AiAdvisorPageContent() {
                           fontStyle: "italic",
                         }}
                       >
-                        "{item.reason}"
+                        &ldquo;{item.reason}&rdquo;
                       </blockquote>
                     </div>
                   </div>
