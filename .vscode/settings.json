@@ -1,0 +1,5 @@
+{
+    "material-icon-theme.hidesExplorerArrows": true,
+    "prettier.printWidth": 120,
+    "editor.formatOnSave": true
+}

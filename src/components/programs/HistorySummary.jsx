@@ -1,0 +1,5 @@
+import { fmtInt, fmtScore, historicalQuotaAt, placedAt, placementYearOf, rankAt, scoreAt } from "../../lib/program-utils";
+
+export default function HistorySummary({ program }) {
+  return <div className="grid min-w-[430px] grid-cols-4 gap-1 [&>div]:rounded-xl [&>div]:border [&>div]:border-white/[0.06] [&>div]:bg-slate-950/45 [&>div]:p-2 [&>div>b]:mb-1.5 [&>div>b]:block [&>div>b]:text-[10px] [&>div>b]:font-black [&>div>b]:text-cyan-300 [&_span]:block [&_span]:text-[11px] [&_span]:font-semibold [&_span]:leading-5 [&_span]:text-slate-300 [&_small]:mr-1 [&_small]:text-[9px] [&_small]:uppercase [&_small]:text-slate-600">{[0, 1, 2, 3].map((offset) => <div key={offset}><b>{placementYearOf(program, offset)}</b><span><small>Sıra</small>{fmtInt(rankAt(program, offset))}</span><span><small>Puan</small>{fmtScore(scoreAt(program, offset))}</span><span><small>Kont.</small>{fmtInt(historicalQuotaAt(program, offset))}</span><span><small>Yer.</small>{fmtInt(placedAt(program, offset))}</span></div>)}</div>;
+}
