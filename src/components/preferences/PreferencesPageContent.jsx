@@ -26,7 +26,10 @@ const riskCountStyle = [
 export default function PreferencesPageContent() {
   const { profile, preferences, savePreferences, togglePreference } = useApp();
   const [message, setMessage] = useState("");
+  const [draggedCode, setDraggedCode] = useState(null);
+  const [dragOverCode, setDragOverCode] = useState(null);
   const fileRef = useRef(null);
+  const dragRef = useRef(null);
 
   const counts = useMemo(
     () =>
@@ -49,6 +52,78 @@ export default function PreferencesPageContent() {
     );
     savePreferences(next);
     setMessage("Tercihlerin risk dağılımı ve başarı sırasına göre akıllı sıralandı.");
+  };
+
+  const movePreference = (sourceCode, targetCode) => {
+    const sourceIndex = preferences.findIndex(
+      (program) => String(codeOf(program)) === String(sourceCode)
+    );
+    const targetIndex = preferences.findIndex(
+      (program) => String(codeOf(program)) === String(targetCode)
+    );
+    if (sourceIndex < 0 || targetIndex < 0 || sourceIndex === targetIndex) return false;
+
+    const next = [...preferences];
+    const [moved] = next.splice(sourceIndex, 1);
+    next.splice(targetIndex, 0, moved);
+    savePreferences(next);
+    setMessage(`${sourceIndex + 1}. sıradaki tercih ${targetIndex + 1}. sıraya taşındı.`);
+    return true;
+  };
+
+  const finishDragging = (handle) => {
+    const drag = dragRef.current;
+    if (drag?.pointerId != null && handle?.hasPointerCapture?.(drag.pointerId)) {
+      handle.releasePointerCapture(drag.pointerId);
+    }
+    dragRef.current = null;
+    setDraggedCode(null);
+    setDragOverCode(null);
+  };
+
+  const startDragging = (event, programCode) => {
+    if (!event.isPrimary || event.button !== 0) return;
+    event.preventDefault();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    dragRef.current = {
+      pointerId: event.pointerId,
+      sourceCode: String(programCode),
+      targetCode: String(programCode),
+    };
+    setDraggedCode(String(programCode));
+    setDragOverCode(String(programCode));
+  };
+
+  const updateDragTarget = (event) => {
+    if (dragRef.current?.pointerId !== event.pointerId) return;
+    const row = document
+      .elementFromPoint(event.clientX, event.clientY)
+      ?.closest("[data-preference-code]");
+    const targetCode = row?.dataset.preferenceCode;
+    if (!targetCode || targetCode === dragRef.current.targetCode) return;
+    dragRef.current.targetCode = targetCode;
+    setDragOverCode(targetCode);
+  };
+
+  const dropPreference = (event) => {
+    if (dragRef.current?.pointerId !== event.pointerId) return;
+    const { sourceCode, targetCode } = dragRef.current;
+    movePreference(sourceCode, targetCode);
+    finishDragging(event.currentTarget);
+  };
+
+  const movePreferenceWithKeyboard = (event, programCode, index) => {
+    const destinations = {
+      ArrowUp: Math.max(0, index - 1),
+      ArrowDown: Math.min(preferences.length - 1, index + 1),
+      Home: 0,
+      End: preferences.length - 1,
+    };
+    if (!(event.key in destinations)) return;
+    event.preventDefault();
+    const targetIndex = destinations[event.key];
+    if (targetIndex === index) return;
+    movePreference(programCode, codeOf(preferences[targetIndex]));
   };
 
   const exportPreferences = () => {
@@ -282,9 +357,13 @@ export default function PreferencesPageContent() {
                 {preferences.map((program, index) => {
                   const risk = riskOf(program, profile);
                   const st = toneStyle[risk.key] || toneStyle.unknown;
+                  const programCode = String(codeOf(program));
+                  const isDragging = draggedCode === programCode;
+                  const isDragTarget = draggedCode && dragOverCode === programCode && !isDragging;
                   return (
                     <div
-                      key={codeOf(program)}
+                      key={programCode}
+                      data-preference-code={programCode}
                       style={{
                         display: "flex",
                         alignItems: "center",
@@ -292,11 +371,49 @@ export default function PreferencesPageContent() {
                         gap: "1rem",
                         padding: "1rem 1.125rem",
                         borderBottom: "1px solid var(--border-subtle)",
-                        transition: "background 0.1s ease",
+                        background: isDragging
+                          ? "rgba(56, 189, 248, 0.06)"
+                          : undefined,
+                        boxShadow: isDragTarget
+                          ? "inset 0 2px 0 var(--primary-400)"
+                          : undefined,
+                        opacity: isDragging ? 0.55 : 1,
+                        transition: "background 0.1s ease, opacity 0.1s ease, box-shadow 0.1s ease",
                       }}
                       className="hover:bg-white/[0.01]"
                     >
                       <div style={{ display: "flex", alignItems: "center", gap: "1rem", minWidth: 0 }}>
+                        {/* Drag handle */}
+                        <button
+                          type="button"
+                          aria-label={`${index + 1}. tercihi taşı. Ok tuşlarıyla sıralayabilirsiniz.`}
+                          title="Sürükleyerek sırala"
+                          onPointerDown={(event) => startDragging(event, programCode)}
+                          onPointerMove={updateDragTarget}
+                          onPointerUp={dropPreference}
+                          onPointerCancel={(event) => finishDragging(event.currentTarget)}
+                          onKeyDown={(event) =>
+                            movePreferenceWithKeyboard(event, programCode, index)
+                          }
+                          style={{
+                            flexShrink: 0,
+                            width: "1.5rem",
+                            height: "2.25rem",
+                            display: "grid",
+                            placeItems: "center",
+                            borderRadius: "var(--radius-sm)",
+                            border: "none",
+                            padding: 0,
+                            background: "transparent",
+                            color: isDragging ? "var(--primary-300)" : "var(--text-muted)",
+                            cursor: isDragging ? "grabbing" : "grab",
+                            touchAction: "none",
+                            fontSize: "1.25rem",
+                            lineHeight: 1,
+                          }}
+                        >
+                          ⠿
+                        </button>
                         {/* Index */}
                         <span
                           style={{

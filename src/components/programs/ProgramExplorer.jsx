@@ -20,6 +20,8 @@ import FilterPanel from "./FilterPanel";
 import ProgramDetailModal from "./ProgramDetailModal";
 import ProgramResults from "./ProgramResults";
 
+const FILTERS_KEY = "yokTercih.programFilters.v1";
+
 const statusToneStyle = {
   info:    { borderColor: "var(--info-border)",    background: "var(--info-bg)",    color: "var(--info-text)" },
   success: { borderColor: "var(--success-border)", background: "var(--success-bg)", color: "var(--success-text)" },
@@ -31,6 +33,7 @@ const statusToneStyle = {
 export default function ProgramExplorer() {
   const { profile, preferences, ready, togglePreference } = useApp();
   const [filters, setFilters] = useState(emptyFilters);
+  const [filtersReady, setFiltersReady] = useState(false);
   const [selectedPrograms, setSelectedPrograms] = useState([]);
   const [selectedCities, setSelectedCities] = useState([]);
   const [lookups, setLookups] = useState({
@@ -51,9 +54,9 @@ export default function ProgramExplorer() {
   const [detailProgram, setDetailProgram] = useState(null);
   const initialized = useRef(false);
   const quickSearchUsed = useRef(false);
-  const initializeData = useEffectEvent((initialFilters) => {
+  const initializeData = useEffectEvent((initialFilters, initialPrograms, initialCities) => {
     loadLookups();
-    search(0, initialFilters, [], []);
+    search(0, initialFilters, initialPrograms, initialCities);
   });
   const runQuickSearch = useEffectEvent((query) => {
     quickSearchUsed.current = Boolean(query);
@@ -90,13 +93,52 @@ export default function ProgramExplorer() {
   useEffect(() => {
     if (!ready || initialized.current) return;
     initialized.current = true;
-    const initialFilters = {
-      ...emptyFilters,
-      scoreType: profile.scoreType || "SAY",
-    };
+    let stored = null;
+    try {
+      stored = JSON.parse(localStorage.getItem(FILTERS_KEY));
+    } catch {}
+
+    const storedFilters = stored?.filters && typeof stored.filters === "object"
+      ? stored.filters
+      : {};
+    const initialFilters = Object.fromEntries(
+      Object.keys(emptyFilters).map((key) => [
+        key,
+        typeof storedFilters[key] === "string"
+          ? storedFilters[key]
+          : key === "scoreType"
+            ? profile.scoreType || "SAY"
+            : emptyFilters[key],
+      ]),
+    );
+    const validSelections = (value) =>
+      Array.isArray(value)
+        ? value.filter(
+            (item) =>
+              item &&
+              (typeof item.id === "string" || typeof item.id === "number") &&
+              typeof item.name === "string",
+          )
+        : [];
+    const initialPrograms = validSelections(stored?.selectedPrograms);
+    const initialCities = validSelections(stored?.selectedCities);
+
     setFilters(initialFilters);
-    initializeData(initialFilters);
+    setSelectedPrograms(initialPrograms);
+    setSelectedCities(initialCities);
+    setFiltersReady(true);
+    initializeData(initialFilters, initialPrograms, initialCities);
   }, [ready, profile.scoreType]);
+
+  useEffect(() => {
+    if (!filtersReady) return;
+    try {
+      localStorage.setItem(
+        FILTERS_KEY,
+        JSON.stringify({ filters, selectedPrograms, selectedCities }),
+      );
+    } catch {}
+  }, [filtersReady, filters, selectedPrograms, selectedCities]);
 
   useEffect(() => {
     const refresh = () => refreshData();
