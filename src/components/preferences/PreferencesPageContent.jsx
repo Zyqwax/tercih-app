@@ -148,78 +148,30 @@ export default function PreferencesPageContent() {
   };
 
   return (
-    <main
-      style={{ maxWidth: "72rem", margin: "0 auto", padding: "1.5rem 1.25rem" }}
-      className="sm:px-6 lg:px-8 lg:py-8"
-    >
-      {/* Header */}
-      <header className="page-header sm:flex-row sm:items-center" style={{ marginBottom: "1.5rem" }}>
+    <main className="preferences-page">
+      <header className="prefs-header prefs-screen-only">
         <div>
           <span className="badge">Tercih Yönetimi</span>
-          <h1
-            style={{
-              marginTop: "0.75rem",
-              fontSize: "1.625rem",
-              fontWeight: 700,
-              color: "var(--text-primary)",
-              letterSpacing: "-0.03em",
-              lineHeight: 1.2,
-            }}
-            className="sm:text-3xl"
-          >
-            Tercih Listem
-          </h1>
-          <p style={{ marginTop: "0.5rem", fontSize: "0.875rem", lineHeight: 1.7, color: "var(--text-muted)" }}>
-            Seçtiğiniz{" "}
-            <strong style={{ color: "var(--text-primary)", fontWeight: 600 }}>{preferences.length}</strong>{" "}
-            program — Maksimum {profile.maxPrefs || 24} tercih hakkınız bulunmaktadır
+          <h1>Tercih Listem</h1>
+          <p>
+            <strong>{preferences.length}</strong> / {profile.maxPrefs || 24} tercih
           </p>
         </div>
-        <Link
-          href="/programlar"
-          className="btn-primary"
-          style={{ textDecoration: "none", flexShrink: 0 }}
-        >
+        <Link href="/programlar" className="btn-primary" style={{ textDecoration: "none" }}>
           + Program Ekle
         </Link>
       </header>
 
-      {/* Alert */}
       {message && (
-        <div
-          style={{
-            marginBottom: "1rem",
-            display: "flex",
-            alignItems: "center",
-            gap: "0.75rem",
-            borderRadius: "var(--radius-lg)",
-            border: "1px solid var(--success-border)",
-            background: "var(--success-bg)",
-            padding: "0.875rem 1rem",
-            fontSize: "0.875rem",
-            fontWeight: 500,
-            color: "var(--success-text)",
-          }}
-        >
+        <div className="prefs-message prefs-screen-only" role="status">
           <span>✓</span>
           <span>{message}</span>
         </div>
       )}
 
-      <section className="panel">
-        <div style={{ padding: "1.5rem" }}>
-          {/* Toolbar */}
-          <div
-            style={{
-              marginBottom: "1.5rem",
-              display: "flex",
-              flexWrap: "wrap",
-              alignItems: "center",
-              gap: "0.5rem",
-              paddingBottom: "1.25rem",
-              borderBottom: "1px solid var(--border-subtle)",
-            }}
-          >
+      <section className="prefs-panel">
+        <div className="prefs-content">
+          <div className="prefs-toolbar prefs-screen-only">
             <button
               type="button"
               className="btn-primary"
@@ -229,309 +181,116 @@ export default function PreferencesPageContent() {
               ✦ Akıllı Sırala
             </button>
             <button type="button" className="btn-secondary" onClick={exportPreferences}>
-              Dışa Aktar (.json)
+              Dışa Aktar
             </button>
             <button type="button" className="btn-secondary" onClick={() => fileRef.current?.click()}>
               İçe Aktar
             </button>
             <button type="button" className="btn-danger" onClick={() => savePreferences([])}>
-              Listeyi Temizle
+              Temizle
             </button>
             <input
               ref={fileRef}
               hidden
               type="file"
               accept=".json"
-              onChange={(e) => e.target.files?.[0] && importPreferences(e.target.files[0])}
+              onChange={(event) =>
+                event.target.files?.[0] && importPreferences(event.target.files[0])
+              }
             />
           </div>
 
-          {/* Risk breakdown */}
-          <h2
-            style={{
-              marginBottom: "0.75rem",
-              fontSize: "0.6875rem",
-              fontWeight: 600,
-              letterSpacing: "0.06em",
-              textTransform: "uppercase",
-              color: "var(--text-muted)",
-            }}
-          >
-            Tercih Dengesi Analizi
-          </h2>
-          <div
-            style={{ marginBottom: "1.5rem", display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "0.75rem" }}
-            className="lg:grid-cols-4"
-          >
+          <div className="prefs-summary prefs-screen-only" aria-label="Tercih dengesi">
+            <span className="prefs-summary-title">Tercih dengesi</span>
             {riskCountStyle.map(({ key, label, border, bg, text }) => (
-              <div
+              <span
                 key={key}
-                style={{
-                  borderRadius: "var(--radius-lg)",
-                  border: `1px solid ${border}`,
-                  background: bg,
-                  padding: "1rem 1.125rem",
-                }}
+                className="prefs-summary-chip"
+                style={{ borderColor: border, background: bg, color: text }}
               >
-                <b
-                  style={{
-                    display: "block",
-                    fontSize: "1.875rem",
-                    fontWeight: 700,
-                    color: "var(--text-primary)",
-                    letterSpacing: "-0.03em",
-                    lineHeight: 1,
-                  }}
-                >
-                  {counts[key]}
-                </b>
-                <span
-                  style={{
-                    display: "block",
-                    marginTop: "0.375rem",
-                    fontSize: "0.6875rem",
-                    fontWeight: 600,
-                    letterSpacing: "0.05em",
-                    textTransform: "uppercase",
-                    color: text,
-                  }}
-                >
-                  {label}
-                </span>
-              </div>
+                <strong>{counts[key]}</strong> {label}
+              </span>
             ))}
           </div>
 
-          {/* List */}
-          <div
-            style={{
-              overflow: "hidden",
-              borderRadius: "var(--radius-lg)",
-              border: "1px solid var(--border-subtle)",
-              background: "var(--bg-elevated)",
-            }}
-          >
+          <div className="preference-list">
             {preferences.length === 0 ? (
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  minHeight: "16rem",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "0.875rem",
-                  padding: "2rem",
-                  textAlign: "center",
-                }}
-              >
-                <div
-                  style={{
-                    width: "3rem",
-                    height: "3rem",
-                    display: "grid",
-                    placeItems: "center",
-                    borderRadius: "var(--radius-lg)",
-                    background: "var(--info-bg)",
-                    color: "var(--info-text)",
-                    fontSize: "1.25rem",
-                  }}
-                >
-                  🔖
-                </div>
-                <h3 style={{ fontSize: "1rem", fontWeight: 600, color: "var(--text-primary)" }}>
-                  Henüz tercih eklenmedi
-                </h3>
-                <p style={{ maxWidth: "28rem", fontSize: "0.8125rem", lineHeight: 1.6, color: "var(--text-muted)" }}>
-                  Programlar sayfasından ilginizi çeken üniversite programlarını &ldquo;+ Tercih&rdquo; düğmesini kullanarak listenize ekleyebilirsiniz.
-                </p>
-                <Link
-                  href="/programlar"
-                  className="btn-primary"
-                  style={{ marginTop: "0.5rem", textDecoration: "none" }}
-                >
+              <div className="prefs-empty prefs-screen-only">
+                <span aria-hidden="true">🔖</span>
+                <h2>Henüz tercih eklenmedi</h2>
+                <p>Programlar sayfasından listenize üniversite programı ekleyebilirsiniz.</p>
+                <Link href="/programlar" className="btn-primary" style={{ textDecoration: "none" }}>
                   Programları İncele
                 </Link>
               </div>
             ) : (
-              <div>
-                {preferences.map((program, index) => {
-                  const risk = riskOf(program, profile);
-                  const st = toneStyle[risk.key] || toneStyle.unknown;
-                  const programCode = String(codeOf(program));
-                  const isDragging = draggedCode === programCode;
-                  const isDragTarget = draggedCode && dragOverCode === programCode && !isDragging;
-                  return (
-                    <div
-                      key={programCode}
-                      data-preference-code={programCode}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        gap: "1rem",
-                        padding: "1rem 1.125rem",
-                        borderBottom: "1px solid var(--border-subtle)",
-                        background: isDragging
-                          ? "rgba(56, 189, 248, 0.06)"
-                          : undefined,
-                        boxShadow: isDragTarget
-                          ? "inset 0 2px 0 var(--primary-400)"
-                          : undefined,
-                        opacity: isDragging ? 0.55 : 1,
-                        transition: "background 0.1s ease, opacity 0.1s ease, box-shadow 0.1s ease",
-                      }}
-                      className="hover:bg-white/[0.01]"
-                    >
-                      <div style={{ display: "flex", alignItems: "center", gap: "1rem", minWidth: 0 }}>
-                        {/* Drag handle */}
-                        <button
-                          type="button"
-                          aria-label={`${index + 1}. tercihi taşı. Ok tuşlarıyla sıralayabilirsiniz.`}
-                          title="Sürükleyerek sırala"
-                          onPointerDown={(event) => startDragging(event, programCode)}
-                          onPointerMove={updateDragTarget}
-                          onPointerUp={dropPreference}
-                          onPointerCancel={(event) => finishDragging(event.currentTarget)}
-                          onKeyDown={(event) =>
-                            movePreferenceWithKeyboard(event, programCode, index)
-                          }
-                          style={{
-                            flexShrink: 0,
-                            width: "1.5rem",
-                            height: "2.25rem",
-                            display: "grid",
-                            placeItems: "center",
-                            borderRadius: "var(--radius-sm)",
-                            border: "none",
-                            padding: 0,
-                            background: "transparent",
-                            color: isDragging ? "var(--primary-300)" : "var(--text-muted)",
-                            cursor: isDragging ? "grabbing" : "grab",
-                            touchAction: "none",
-                            fontSize: "1.25rem",
-                            lineHeight: 1,
-                          }}
-                        >
-                          ⠿
-                        </button>
-                        {/* Index */}
-                        <span
-                          style={{
-                            flexShrink: 0,
-                            width: "2.25rem",
-                            height: "2.25rem",
-                            display: "grid",
-                            placeItems: "center",
-                            borderRadius: "var(--radius-md)",
-                            background: "var(--info-bg)",
-                            border: "1px solid var(--info-border)",
-                            fontSize: "0.8125rem",
-                            fontWeight: 700,
-                            color: "var(--info-text)",
-                          }}
-                        >
-                          {index + 1}
-                        </span>
-                        {/* Program info */}
-                        <div style={{ minWidth: 0 }}>
-                          <strong
-                            style={{
-                              display: "block",
-                              fontSize: "0.9375rem",
-                              fontWeight: 600,
-                              color: "var(--text-primary)",
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            {programOf(program)}
-                          </strong>
-                          <span
-                            style={{
-                              display: "block",
-                              marginTop: "0.125rem",
-                              fontSize: "0.75rem",
-                              color: "var(--text-muted)",
-                            }}
-                          >
-                            {uniOf(program)} · {cityOf(program)}
-                          </span>
-                          <div style={{ marginTop: "0.5rem", display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
-                            <span
-                              style={{
-                                display: "inline-flex",
-                                alignItems: "center",
-                                borderRadius: "var(--radius-sm)",
-                                border: "1px solid",
-                                padding: "0.125rem 0.5rem",
-                                fontSize: "0.625rem",
-                                fontWeight: 700,
-                                letterSpacing: "0.04em",
-                                textTransform: "uppercase",
-                                ...st,
-                              }}
-                            >
-                              {risk.label}
-                            </span>
-                            <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
-                              {placementYearOf(program)} Sırası:{" "}
-                              <strong style={{ color: "var(--text-secondary)", fontWeight: 600 }}>
-                                {fmtInt(rankAt(program))}
-                              </strong>
-                            </span>
-                            <span
-                              style={{
-                                fontSize: "0.75rem",
-                                fontWeight: 600,
-                                color: "var(--primary-300)",
-                              }}
-                            >
-                              {scoreTypeOf(program)}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
+              preferences.map((program, index) => {
+                const risk = riskOf(program, profile);
+                const st = toneStyle[risk.key] || toneStyle.unknown;
+                const programCode = String(codeOf(program));
+                const isDragging = draggedCode === programCode;
+                const isDragTarget = draggedCode && dragOverCode === programCode && !isDragging;
 
-                      {/* Remove button */}
-                      <button
-                        type="button"
-                        onClick={() => togglePreference(program)}
-                        title="Listeden çıkar"
-                        style={{
-                          flexShrink: 0,
-                          width: "2.25rem",
-                          height: "2.25rem",
-                          display: "grid",
-                          placeItems: "center",
-                          borderRadius: "var(--radius-md)",
-                          border: "1px solid var(--border-soft)",
-                          background: "var(--bg-overlay)",
-                          color: "var(--text-muted)",
-                          fontSize: "1.125rem",
-                          lineHeight: 1,
-                          cursor: "pointer",
-                          transition: "all 0.15s ease",
-                        }}
-                      >
-                        ×
-                      </button>
+                return (
+                  <div
+                    key={programCode}
+                    data-preference-code={programCode}
+                    className={`preference-row${isDragging ? " is-dragging" : ""}${isDragTarget ? " is-drag-target" : ""}`}
+                  >
+                    <button
+                      type="button"
+                      className="preference-drag prefs-screen-only"
+                      aria-label={`${index + 1}. tercihi taşı. Ok tuşlarıyla sıralayabilirsiniz.`}
+                      title="Sürükleyerek sırala"
+                      onPointerDown={(event) => startDragging(event, programCode)}
+                      onPointerMove={updateDragTarget}
+                      onPointerUp={dropPreference}
+                      onPointerCancel={(event) => finishDragging(event.currentTarget)}
+                      onKeyDown={(event) =>
+                        movePreferenceWithKeyboard(event, programCode, index)
+                      }
+                    >
+                      ⠿
+                    </button>
+
+                    <span className="preference-index">{index + 1}</span>
+
+                    <div className="preference-info">
+                      <strong className="preference-name">{programOf(program)}</strong>
+                      <div className="preference-meta">
+                        <span className="preference-university">
+                          {uniOf(program)} · {cityOf(program)}
+                        </span>
+                        <span className="preference-detail">
+                          {placementYearOf(program)} sıra: {fmtInt(rankAt(program))}
+                        </span>
+                        <span className="preference-score-type">{scoreTypeOf(program)}</span>
+                        <span className="preference-risk" style={st}>{risk.label}</span>
+                      </div>
                     </div>
-                  );
-                })}
-              </div>
+
+                    <button
+                      type="button"
+                      className="preference-remove prefs-screen-only"
+                      onClick={() => togglePreference(program)}
+                      aria-label={`${programOf(program)} programını listeden çıkar`}
+                      title="Listeden çıkar"
+                    >
+                      ×
+                    </button>
+                  </div>
+                );
+              })
             )}
           </div>
 
-          {/* Print button */}
           {preferences.length > 0 && (
             <button
               type="button"
-              className="btn-secondary print:hidden"
-              style={{ marginTop: "1rem" }}
+              className="btn-secondary prefs-print-button prefs-screen-only"
               onClick={() => window.print()}
             >
-              🖨️ Yazdır / PDF Kaydet
+              🖨️ Listeyi PDF / Yazdır
             </button>
           )}
         </div>
